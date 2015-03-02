@@ -710,26 +710,28 @@ namespace MatterHackers.PolygonMesh
             }
 
             // Set the new firstMeshEdge on the new Vertex
-            vertexCreatedDuringSplit.firstMeshEdge = meshEdgeCreatedDuringSplit;
+            vertexCreatedDuringSplit.firstMeshEdge = meshEdgeToSplit;
 
 			Vertex existingVertexToConectTo = meshEdgeToSplit.VertexOnEnd[1];
-            // fix the Vertex references on the MeshEdges
-            {
-                // and set the edges to point to this new one
-                meshEdgeCreatedDuringSplit.VertexOnEnd[0] = vertexCreatedDuringSplit;
-                meshEdgeCreatedDuringSplit.VertexOnEnd[1] = existingVertexToConectTo;
-                meshEdgeToSplit.VertexOnEnd[1] = vertexCreatedDuringSplit;
-            }
 
-            // fix the MeshEdgeLinks on the MeshEdges
+			meshEdgeToSplit.RemoveFromMeshEdgeLinksOfVertex(existingVertexToConectTo);
+			
+			// fix the Vertex references on the MeshEdges
+			{
+				// and set the edges to point to this new one
+				meshEdgeCreatedDuringSplit.VertexOnEnd[0] = vertexCreatedDuringSplit;
+				meshEdgeCreatedDuringSplit.VertexOnEnd[1] = existingVertexToConectTo;
+				meshEdgeToSplit.VertexOnEnd[1] = vertexCreatedDuringSplit;
+			}
+
             {
-                // set the created edge to be connected to the old edges other mesh edges
-                meshEdgeCreatedDuringSplit.NextMeshEdgeFromEnd[0] = meshEdgeToSplit;
-                
-				// make anything that pointed to the split edge point to the new mesh edge
-				
-                meshEdgeToSplit.NextMeshEdgeFromEnd[1] = meshEdgeCreatedDuringSplit;
-            }
+				meshEdgeCreatedDuringSplit.AddToMeshEdgeLinksOfVertex(existingVertexToConectTo);
+
+				meshEdgeToSplit.AddToMeshEdgeLinksOfVertex(vertexCreatedDuringSplit);
+				meshEdgeCreatedDuringSplit.AddToMeshEdgeLinksOfVertex(vertexCreatedDuringSplit);
+			}
+
+			MeshEdges.Add(meshEdgeCreatedDuringSplit);
 
             // if the MeshEdge is part of a face than we have to fix the face up
             FaceEdge faceEdgeToSplit = meshEdgeToSplit.firstFaceEdge;
